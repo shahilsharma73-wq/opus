@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TA / DA / LTC Claim Generator — Travel Regulations 2025</title>
+<!-- Installable web-app (iOS Add to Home Screen) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Claim Helper">
+<meta name="application-name" content="Claim Helper">
+<meta name="theme-color" content="#134474">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23134474%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27white%27%3E%E2%82%B9%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0f1d2e;--panel:#fff;--ink:#1a2433;--muted:#5b6b7f;--line:#e2e8f0;
+    --accent:#1b5e9c;--accent-d:#134474;--soft:#eef4fb;--ok:#127a4a;--okbg:#e7f6ee;
+    --warn:#b4541a;--warnbg:#fdf0e6;--chip:#dde9f6;--hi:#fff7df;--hiln:#e8cf7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#f3f6fa;line-height:1.5}
+  header{background:linear-gradient(135deg,var(--accent-d),var(--accent));color:#fff;padding:24px 22px}
+  header h1{margin:0;font-size:22px}
+  header p{margin:6px 0 0;font-size:13px;opacity:.92}
+  .tagline{display:inline-block;background:rgba(255,255,255,.16);padding:3px 10px;border-radius:20px;font-size:12px;margin-top:10px}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 18px 60px}
+
+  /* form */
+  .form{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:18px}
+  .form h2{margin:0 0 4px;font-size:17px;color:var(--accent-d)}
+  .form .hint{font-size:12px;color:var(--muted);margin:0 0 16px}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+  .field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(27,94,156,.12)}
+  .modes{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+  .modes label{display:flex;gap:6px;align-items:center;font-size:13px;font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0}
+  .modes input{width:16px;height:16px;accent-color:var(--accent)}
+  .gen-row{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+
+  .btn{border:1px solid var(--line);background:#fff;color:var(--accent-d);font-weight:600;font-size:14px;padding:11px 18px;border-radius:10px;cursor:pointer}
+  .btn:hover{background:var(--soft)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn.primary:hover{background:var(--accent-d)}
+
+  /* output */
+  #out{display:none;margin-top:22px}
+  #out.show{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+  .sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .sheet-head{background:linear-gradient(135deg,var(--accent-d),var(--accent));color:#fff;padding:18px 22px}
+  .sheet-head h2{margin:0;font-size:19px}
+  .sheet-head .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+  .sheet-head .meta span{background:rgba(255,255,255,.16);padding:3px 10px;border-radius:7px;font-size:12px}
+  .deadline-banner{background:#fff7df;border-bottom:1px solid var(--hiln);padding:13px 22px;font-size:14px;color:#5d4912;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .deadline-banner .clk{font-size:20px}
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .badge.ok{background:var(--okbg);color:var(--ok)}
+  .badge.soon{background:var(--warnbg);color:var(--warn)}
+  .badge.over{background:#fde7e7;color:#b42323}
+
+  .block{padding:18px 22px;border-bottom:1px solid var(--line)}
+  .block:last-child{border-bottom:none}
+  .block h3{margin:0 0 12px;font-size:15px;color:var(--accent-d);display:flex;align-items:center;gap:9px}
+  .block h3 .n{width:24px;height:24px;border-radius:7px;background:var(--soft);display:grid;place-items:center;font-size:13px}
+
+  table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.t th,table.t td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{background:var(--soft);color:var(--accent-d);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  table.t td:first-child{font-weight:600;width:26%}
+  table.t td .ref{color:var(--muted);font-size:11px}
+  tr.hi td{background:var(--hi)}
+  tr.hi td:first-child::after{content:" ◀ your route";color:#9a7b1e;font-weight:600;font-size:11px}
+
+  .auth-card{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+  .auth-card .role{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
+  .auth-card .who{font-size:15px;font-weight:700;color:var(--accent-d);margin:2px 0 3px}
+  .auth-card .desc{font-size:12.5px;color:var(--ink)}
+  .auth-card .pill{display:inline-block;font-size:10.5px;font-weight:700;background:var(--chip);color:var(--accent-d);padding:2px 7px;border-radius:6px;margin-top:6px}
+
+  .callout{border-radius:9px;padding:12px 14px;font-size:13px;margin:8px 0;border:1px solid}
+  .callout.ok{background:var(--okbg);border-color:#aee0c4;color:#0c5536}
+  .callout.warn{background:var(--warnbg);border-color:#f0c9a8;color:#7a3b12}
+  .callout b{display:block;margin-bottom:2px}
+
+  ol.steps{margin:0;padding-left:18px}
+  ol.steps li{margin:0 0 10px}
+  ol.steps li b{color:var(--accent-d)}
+  .check label{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13.5px}
+  .check label:hover{background:var(--soft)}
+  .check input{margin-top:3px;width:16px;height:16px;flex:none;accent-color:var(--accent)}
+  .opt{font-style:italic;color:var(--muted);font-size:12px}
+
+  footer{font-size:11px;color:var(--muted);text-align:center;padding:20px;max-width:1080px;margin:0 auto;line-height:1.6}
+
+  /* ===== interactive enhancements ===== */
+  header{position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07)}
+  header h1{position:relative;display:flex;align-items:center;gap:10px}
+  header h1::before{content:"🧾";font-size:24px}
+
+  .btn{transition:transform .12s ease, background .15s ease, box-shadow .15s ease}
+  .btn:active{transform:scale(.96)}
+  .btn.primary{box-shadow:0 4px 14px rgba(27,94,156,.3)}
+  .btn.primary:hover{box-shadow:0 6px 20px rgba(27,94,156,.4);transform:translateY(-1px)}
+  .field input,.field select{transition:border-color .15s, box-shadow .15s}
+
+  /* claim tiles */
+  .claim-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:2px 0 4px}
+  .ctile{border:2px solid var(--line);border-radius:13px;padding:14px 12px;cursor:pointer;background:#fff;text-align:left;transition:transform .15s,border-color .15s,box-shadow .15s;position:relative}
+  .ctile:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(20,68,116,.13);border-color:#a9c6e4}
+  .ctile.active{border-color:var(--accent);background:linear-gradient(180deg,#f3f8fd,#eaf2fb)}
+  .ctile.active::after{content:"✓";position:absolute;top:8px;right:10px;width:20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .ctile .ico{font-size:22px;line-height:1}
+  .ctile .ti{font-weight:700;font-size:13.5px;color:var(--accent-d);margin:7px 0 2px}
+  .ctile .su{font-size:11px;color:var(--muted);line-height:1.35}
+
+  /* segmented control */
+  .seg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px}
+  .seg button{border:none;background:transparent;padding:8px 16px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+  .seg button.on{background:#fff;color:var(--accent-d);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+  /* blocks animate in, staggered */
+  #out.show .block{opacity:0;animation:rise .45s ease forwards}
+  #out.show .block:nth-child(2){animation-delay:.04s}
+  #out.show .block:nth-child(3){animation-delay:.10s}
+  #out.show .block:nth-child(4){animation-delay:.16s}
+  #out.show .block:nth-child(5){animation-delay:.22s}
+  #out.show .block:nth-child(6){animation-delay:.28s}
+  #out.show .block:nth-child(7){animation-delay:.34s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .block h3 .n{background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;font-weight:700}
+  .block{transition:background .2s}
+
+  /* big animated total chip */
+  .total-chip{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#0e7a48,#149a5b);color:#fff;border-radius:14px;padding:16px 20px;margin:4px 0 12px;box-shadow:0 6px 20px rgba(14,122,72,.28)}
+  .total-chip .big{font-size:26px;font-weight:800;letter-spacing:.3px;animation:pop .4s ease}
+  .total-chip .lbl{font-size:12px;opacity:.92;text-transform:uppercase;letter-spacing:.6px}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+
+  /* checklist progress */
+  .progwrap{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .progbar{flex:1;height:9px;background:var(--soft);border-radius:20px;overflow:hidden}
+  .progfill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--ok));border-radius:20px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .progtxt{font-size:12px;font-weight:700;color:var(--accent-d);white-space:nowrap}
+  .check label{transition:background .12s}
+  .check input:checked + span{color:var(--muted);text-decoration:line-through;text-decoration-color:#bcd0e6}
+
+  /* tappable rows feel */
+  table.t tr:not(:first-child):hover td{background:#f7fafd}
+
+  @media(max-width:560px){
+    .wrap{padding:14px 12px 50px}
+    .btn{flex:1;text-align:center}
+    .total-chip .big{font-size:22px}
+    .ctile{padding:12px 10px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+  }
+  @media print{
+    .form,.gen-row,header .tagline{display:none}
+    header,.sheet-head{background:#134474 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #out{display:block !important;margin-top:0}
+    .sheet{border:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding-bottom:0">
+    <h1>TA / DA / LTC Claim Generator</h1>
+    <p>Enter your details once — get your entitlements and the exact authorities for your claim. Based on Defence Services Travel Regulations, Edition 2025.</p>
+    <span class="tagline">Fill the form → Generate → Print/Save your personalised claim sheet</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="form">
+    <h2>Your details</h2>
+    <p class="hint">Entitlements are governed by <b>Pay Level</b>; selecting your rank sets it automatically. Authorities are derived from where you serve.</p>
+    <div class="fgrid">
+      <div class="field"><label>Name</label><input id="f_name" placeholder="Rank &amp; name"></div>
+      <div class="field"><label>Service / Personal No.</label><input id="f_no" placeholder="optional"></div>
+      <div class="field"><label>Service</label>
+        <div class="seg" id="svcSeg">
+          <button type="button" class="on" data-v="Army">Army</button>
+          <button type="button" data-v="Navy">Navy</button>
+          <button type="button" data-v="Air Force">Air&nbsp;Force</button>
+        </div>
+        <select id="f_service" style="display:none">
+          <option value="Army">Army</option>
+          <option value="Navy">Navy</option>
+          <option value="Air Force">Air Force</option>
+        </select></div>
+      <div class="field"><label>Rank / Pay Level</label>
+        <select id="f_rank"></select></div>
+      <div class="field"><label>Where you serve (for authority)</label>
+        <select id="f_post">
+          <option value="hq">Service HQ / HQ IDS</option>
+          <option value="cmd">Command HQ</option>
+          <option value="corps">Corps / Area / Division HQ</option>
+          <option value="bde">Brigade / Sub-Area HQ</option>
+          <option value="unit" selected>Unit under a Station Commander</option>
+          <option value="ship">Ship / Naval establishment</option>
+          <option value="afstn">Air Force Station / Unit</option>
+          <option value="field">Field / other unit (no local HQ)</option>
+        </select></div>
+      <div class="field" style="grid-column:1/-1"><label>Claim type — tap one</label>
+        <div class="claim-tiles" id="claimTiles">
+          <button type="button" class="ctile active" data-v="temp"><div class="ico">🧳</div><div class="ti">TA / DA · Temporary Duty</div><div class="su">Tour · course · conference</div></button>
+          <button type="button" class="ctile" data-v="perm"><div class="ico">📦</div><div class="ti">TA · Permanent Duty</div><div class="su">Posting / transfer move</div></button>
+          <button type="button" class="ctile" data-v="ltcH"><div class="ico">🏠</div><div class="ti">LTC · Home Town</div><div class="su">TR 177A · alternate year</div></button>
+          <button type="button" class="ctile" data-v="ltcA"><div class="ico">🗺️</div><div class="ti">LTC · Anywhere in India</div><div class="su">TR 177B</div></button>
+        </div>
+        <select id="f_claim" style="display:none">
+          <option value="temp">TA / DA — Temporary Duty (tour/course)</option>
+          <option value="perm">TA — Permanent Duty / Transfer</option>
+          <option value="ltcH">LTC — Home Town / SPR (TR 177A)</option>
+          <option value="ltcA">LTC — Anywhere in India (TR 177B)</option>
+        </select></div>
+      <div class="field"><label>Date journey completed <span style="text-transform:none;color:var(--accent);font-weight:600">(for deadline)</span></label><input type="date" id="f_date"></div>
+      <div class="field"><label>LTC advance drawn? <span style="text-transform:none;font-weight:400">(LTC only)</span></label>
+        <select id="f_adv">
+          <option value="no">No — advance not drawn</option>
+          <option value="yes">Yes — advance drawn</option>
+        </select></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Mode(s) of journey (highlights your entitlement)</label>
+      <div class="modes">
+        <label><input type="checkbox" class="mode" value="air">Air</label>
+        <label><input type="checkbox" class="mode" value="rail" checked>Rail</label>
+        <label><input type="checkbox" class="mode" value="road">Road</label>
+        <label><input type="checkbox" class="mode" value="sea">Sea</label>
+      </div>
+    </div>
+
+    <h2 style="margin:22px 0 4px;font-size:15px">Journey &amp; amount <span style="font-weight:400;font-size:12px;color:var(--muted)">— for the entitlement &amp; advance estimate</span></h2>
+    <div class="fgrid">
+      <div class="field"><label id="lab_from">Duty station (from)</label><input id="f_from" placeholder="e.g. Leh"></div>
+      <div class="field"><label id="lab_to">TD station (to)</label><input id="f_to" placeholder="e.g. Kota"></div>
+      <div class="field"><label>Distance (km) — road, shortest route</label><input id="f_dist" type="number" min="0" placeholder="e.g. 1400"></div>
+      <div class="field"><label>Last month basic pay (₹) <span style="text-transform:none;font-weight:400">(for CTG, PD only)</span></label><input id="f_pay" type="number" min="0" placeholder="e.g. 130600"></div>
+      <div class="field" id="wrap_days"><label>Days on temporary duty <span style="text-transform:none;font-weight:400">(food/DA, TD only)</span></label><input id="f_days" type="number" min="0" placeholder="e.g. 5"></div>
+      <div class="field" id="wrap_nights"><label>Nights in hotel/lodging <span style="text-transform:none;font-weight:400">(accommodation, TD only)</span></label><input id="f_nights" type="number" min="0" placeholder="e.g. 4"></div>
+      <div class="field"><label>Est. to-&amp;-fro travel charges (₹) <span style="text-transform:none;font-weight:400">(rail/air)</span></label><input id="f_fare" type="number" min="0" placeholder="e.g. 6000"></div>
+      <div class="field"><label>Local/road travel for RMA (km)</label><input id="f_rmakm" type="number" min="0" placeholder="e.g. 30"></div>
+      <div class="field"><label>RMA mode</label>
+        <select id="f_rmamode">
+          <option value="car">Own car / taxi (₹24/km)</option>
+          <option value="auto">Auto / own scooter (₹12/km)</option>
+        </select></div>
+      <div class="field"><label>Moving from a field / concessional area?</label>
+        <select id="f_field">
+          <option value="no">No — normal peace-to-peace move</option>
+          <option value="yes">Yes — from field/concessional area</option>
+        </select></div>
+      <div class="field"><label>Island move (A&amp;N / Lakshadweep)?</label>
+        <select id="f_island">
+          <option value="no">No</option>
+          <option value="yes">Yes — to/from A&amp;N or Lakshadweep</option>
+        </select></div>
+    </div>
+
+    <div class="gen-row">
+      <button class="btn primary" id="genBtn">Generate my claim sheet</button>
+      <button class="btn" id="printBtn">🖨️ Print / Save as PDF</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<footer>
+  Auto-generated guidance distilled from <b>Defence Services Travel Regulations, Edition 2025</b> (English version prevails). Entitlements per TR 57 (rail), 58 (sea), 61/61A (road &amp; baggage), 62 (air), 59/114 (DA). Authorities per Appendices A (Competent Authority), B (Controlling Officer), C (move orders), D (countersignature exemption). This tool is an aid — verify the governing rule and your unit's standing orders before submission.
+</footer>
+
+<script>
+/* mobile compatibility polyfill */
+if(window.NodeList&&!NodeList.prototype.forEach){NodeList.prototype.forEach=Array.prototype.forEach;}
+function _arr(x){return Array.prototype.slice.call(x);}
+/* ---------- rank → pay level (numeric tier) ---------- */
+const RANKS = {
+  Army:[
+    ["Lieutenant","10",10],["Captain","10 B",10.5],["Major","11",11],
+    ["Lieutenant Colonel","12 A",12.5],["Colonel","13",13],["Brigadier","13 A",13.5],
+    ["Major General","14",14],["Lieutenant General (HAG)","15",15],
+    ["Lt General (HAG+)","16",16],["Army Cdr / VCOAS","17",17],["COAS","18",18],
+    ["— JCO/OR: Sepoy (Level 3)","3",3],["— Naik (Level 4)","4",4],["— Havildar (Level 5)","5",5],
+    ["— Naib Subedar (Level 6)","6",6],["— Subedar (Level 7)","7",7],["— Subedar Major (Level 8)","8",8]
+  ],
+  Navy:[
+    ["Sub Lieutenant","10",10],["Lieutenant","10 B",10.5],["Lieutenant Commander","11",11],
+    ["Commander","12 A",12.5],["Captain (IN)","13",13],["Commodore","13 A",13.5],
+    ["Rear Admiral","14",14],["Vice Admiral (HAG)","15",15],["Vice Adm (HAG+)","16",16],
+    ["C-in-C / FOC-in-C","17",17],["CNS","18",18],
+    ["— Sailor (Level 3)","3",3],["— Level 4","4",4],["— Level 5","5",5],
+    ["— Petty Officer (Level 6)","6",6],["— CPO (Level 7)","7",7],["— MCPO (Level 8)","8",8]
+  ],
+  "Air Force":[
+    ["Flying Officer","10",10],["Flight Lieutenant","10 B",10.5],["Squadron Leader","11",11],
+    ["Wing Commander","12 A",12.5],["Group Captain","13",13],["Air Commodore","13 A",13.5],
+    ["Air Vice Marshal","14",14],["Air Marshal (HAG)","15",15],["Air Mshl (HAG+)","16",16],
+    ["AOC-in-C","17",17],["CAS","18",18],
+    ["— Airman (Level 3)","3",3],["— Level 4","4",4],["— Sergeant (Level 5)","5",5],
+    ["— JWO (Level 6)","6",6],["— WO (Level 7)","7",7],["— MWO (Level 8)","8",8]
+  ]
+};
+
+/* ---------- entitlement rules ---------- */
+function railClass(n){ if(n>=12)return"Executive Class / AC First (AC-I)"; if(n>=5.5)return"AC II Tier (AC-II) / Chair Car on Shatabdi"; return"AC III Tier (AC-III) / Chair Car"; }
+function airClass(n){ if(n>=14)return"Business / Club Class"; if(n>=5.5)return"Economy Class"; return"Not entitled to air — reimbursed at entitled rail fare, shortest route"; }
+function seaClass(n){ if(n>=9)return"Highest class"; if(n>=5.5)return"Lower of two classes / second class"; if(n>=4)return"Middle / second class (third if four classes)"; return"Lowest class"; }
+function roadClass(n){
+  if(n>=14)return"Any public bus incl. AC bus; or AC taxi; or auto-rickshaw/own scooter at prescribed rates";
+  if(n>=5.5)return"Any public bus incl. AC bus (AC taxi NOT permissible); or auto-rickshaw/own scooter at prescribed rates";
+  if(n>=4)return"Any public bus other than AC; or auto-rickshaw/own scooter at prescribed rates";
+  return"Ordinary public bus only; or auto-rickshaw/own scooter at prescribed rates";
+}
+function baggage(n){
+  if(n>=5.5)return"6000 kg by goods train / 4-wheeler wagon / 1 container — or Rs 50 per km by road";
+  if(n>=5)return"3000 kg — or Rs 25 per km by road";
+  return"1500 kg — or Rs 15 per km by road";
+}
+
+/* ---------- money rates (TR 2025; base rates, +25% per 50% DA hike not auto-applied) ---------- */
+function baggageRoadRate(n){ if(n>=5.5)return 50; if(n>=5)return 25; return 15; }   // Rs/km, TR 61A
+function baggageKg(n){ if(n>=5.5)return 6000; if(n>=5)return 3000; return 1500; }     // kg scale
+function daFood(n){ if(n>=14)return 1200; if(n>=12)return 1000; if(n>=9)return 900; if(n>=5.5)return 800; return 500; } // Rs/day lump-sum, TR 59
+function hotelCeil(n){ if(n>=14)return 7500; if(n>=12)return 4500; if(n>=9)return 2250; if(n>=5.5)return 750; return 450; } // Rs/day ceiling
+const RMA_CAR=24, RMA_AUTO=12;  // Rs/km, TR 61 Para 2 (where no specific rate notified)
+function rupee(x){ return '₹' + Math.round(x).toLocaleString('en-IN'); }
+
+/* ---------- authority logic ---------- */
+function controllingOfficer(post, service){
+  const m={
+    hq:["Head of your Branch","All personnel at Service HQ / HQ IDS — Appendix B, item 1."],
+    cmd:["Head of your Branch","All personnel at Command HQ — Appendix B, item 3."],
+    corps:["GOC Area / Sub-Area (Div Cdr exercises Area Cdr powers for TA/DA)","Staff at Area/Div HQ — Appendix B, items 4 & 7."],
+    bde:["GOC Sub-Area / Brigade Commander","Officers at Sub-Area / Brigade HQ — Appendix B, item 4."],
+    unit:["Station Commander","Units & individuals under the Station Commander — Appendix B, item 10."],
+    ship:["Commanding Officer (Cdr & above) / FOC Fleet or Area / CO of establishment","Navy personnel — Appendix B, item 15."],
+    afstn:["OC of the Air Force Station","AF Station OC of/above Wing Cdr with no local superior acts as own controlling officer — Appendix D, item 25."],
+    field:["GOC Area / Sub-Area or Brigade Commander under whom you serve","Staff serving away from a HQ — Appendix B, item 7."]
+  };
+  return m[post]||m.unit;
+}
+function competentAuthority(post){
+  const m={
+    hq:"The Principal Staff Officer / Director General of your Directorate at Service HQ (Appendix A).",
+    cmd:"Your GOC-in-C / FOC-in-C / AOC-in-C, Command (Appendix A).",
+    corps:"Your Corps Commander / Area Commander; Div Cdr has Area Cdr powers (Appendix A).",
+    bde:"Your Area / Sub-Area Commander, or GOC-in-C Command (Appendix A).",
+    unit:"The Station/Formation Commander empowered as Competent Authority; else GOC-in-C Command (Appendix A).",
+    ship:"FOC-in-C of your Naval Command / FOC Fleet or Area (Appendix A).",
+    afstn:"AOC-in-C of your Command (Appendix A).",
+    field:"GOC-in-C Command / Corps / Area Commander under whom you serve (Appendix A)."
+  };
+  return m[post]||m.unit;
+}
+
+/* ---------- claim-type steps/docs (TR refs) ---------- */
+const CLAIM={
+  temp:{title:"TA / DA — Temporary Duty",
+    steps:[
+      ["Confirm the move is ordered","Duty authorised by the Appendix C authority; obtain a certified copy of the movement order. <i>(TR 4, 6)</i>"],
+      ["Draw advance (optional)","TA + DA advance from PCDA(O) / PAO before leaving; course advance paid 10 days before. <i>(TR 17.1)</i>"],
+      ["Travel by entitled mode/class","Use your entitled class (see entitlements above). Govt-cost air via BLCL / Ashok Travels / IRCTC only. Keep tickets, boarding passes, fare receipts. <i>(Ch 3, TR 62)</i>"],
+      ["Prepare the TA bill","Enter journey particulars, mileage, DA for halt days. Lost boarding pass → Self-Declaration Certificate with PNR/ticket no. <i>(TR 23)</i>"],
+      ["Get it countersigned","See the countersignature box below. <i>(TR 6)</i>"],
+      ["Submit & adjust advance","Submit to PCDA on completion of journey, complete in all respects. <i>(TR 17, Note 3)</i>"]],
+    docs:["Movement order (certified copy)|0","Air/rail/road/sea tickets|0","Boarding passes (air)|1","Self-declaration in lieu of boarding pass (if lost)|1","Fare receipts / local conveyance vouchers|0","TA + DA advance details (if drawn)|1","Controlling Officer countersignature (unless exempt)|0","Competent Authority sanction (only if relaxation claimed)|1"],
+    note:"DA <b>is</b> admissible for halt days on temporary duty (¼ DA if free board &amp; lodging, ½ if free board, ¾ if free lodging). <i>(TR 114)</i>"},
+  perm:{title:"TA — Permanent Duty / Transfer",
+    steps:[
+      ["Confirm posting & grade","Move authorised under Appendix C; TA grade fixed by facts on date of transfer. <i>(TR 16.4)</i>"],
+      ["Draw advance (optional)","TA advance via PCDA(O)/PAO; family may precede/follow within the lien. <i>(TR 17)</i>"],
+      ["Move family & baggage within lien","Within 6 months of your move (extendable by competent authority); within entitled weight scale. <i>(TR 16, 61A)</i>"],
+      ["Collect proof of expenditure","Personal-effects transport claims need receipts/vouchers; CO may waive in genuine cases. <i>(TR 23.2)</i>"],
+      ["Prepare full TA claim","Full particulars for family move and transport of personal effects/conveyance. <i>(TR 23.1)</i>"],
+      ["Countersign & submit","See countersignature box; family claim not admitted until head of family actually moves. <i>(TR 16.6)</i>"]],
+    docs:["Posting / movement order (certified copy)|0","Self, family & baggage tickets|0","Receipts for transport of personal effects|0","Weight statement (within entitled scale)|0","Private-vehicle transport receipts, if claimed|1","TA advance details (if drawn)|1","Controlling Officer countersignature (unless exempt)|0","Competent Authority sanction (relaxation / time extension)|1"],
+    note:"No DA on permanent-duty moves for service personnel. Family added after the transfer date is not entitled to TA. <i>(TR 59, 16)</i>"},
+  ltcH:{title:"LTC — Home Town / SPR (TR 177A)",
+    steps:[
+      ["Check eligibility & block year","Confirm this is your home-town LTC year (alternate year); declare home town/SPR; family per Rule 2 entitled. <i>(TR 177A)</i>"],
+      ["Apply for leave & advance","On authorised leave. LTC advance 60 days before (train) / 65 days (air/sea/road); officers travel on warrant/Form 'D'. <i>(TR 17.5)</i>"],
+      ["Travel by entitled mode","Warrant/Form 'D' (incl. Rajdhani/Shatabdi) for officer; family fares reimbursed. Govt-cost air via authorised agents, marked 'LTC'. No DA on LTC. <i>(TR 176)</i>"],
+      ["Complete return within 6 months","Wife &amp; children's return within 6 months of onward journey (relaxable by Branch Heads / C-in-C). <i>(TR 177A)</i>"],
+      ["Prepare LTC claim","Record PNR/ticket numbers; CO may waive cash receipts via waiver certificate. <i>(TR 23.3)</i>"],
+      ["Countersign & submit","See countersignature box; air certificate/undertaking within 7 days where applicable. <i>(TR 176 Note 10)</i>"]],
+    docs:["Leave sanction|0","Home town / SPR declaration|0","Warrant / Form 'D' (officer) & family tickets|0","Air tickets via authorised agent marked 'LTC' (if by air)|1","PNR / ticket numbers on bill|0","Boarding passes / self-declaration (air)|1","LTC advance + proof of ticket purchase within 10 days (if drawn)|1","Controlling Officer countersignature (unless exempt)|0"],
+    note:"Spouse &amp; children need not reside with you to be eligible. No DA is admissible on any LTC journey. <i>(TR 176.1)</i>"},
+  ltcA:{title:"LTC — Anywhere in India (TR 177B)",
+    steps:[
+      ["Confirm 'Anywhere' block year","Verify this is your Anywhere-in-India entitlement year; declare the place of visit. <i>(TR 177B.1)</i>"],
+      ["Leave & advance","On annual/casual leave; draw LTC advance 60/65 days before as applicable. <i>(TR 17.5)</i>"],
+      ["Travel — officer on warrant, family reimbursed","Officer by rail on warrant; wife &amp; dependent children reimbursed actual fare, no distance limit. Govt-cost air via authorised agents. <i>(TR 177B.7, 176)</i>"],
+      ["Mind separation rules","If family separated (non-family station/no accommodation), LTC from their residence, restricted to entitled class shortest route. <i>(TR 177B.3–4)</i>"],
+      ["Return within 6 months & prepare claim","Complete return within 6 months; record PNR/ticket numbers; CO may waive receipts. <i>(TR 23.3)</i>"],
+      ["Countersign & submit","See countersignature box; air certificate within 7 days where applicable. <i>(TR 176 Note 10)</i>"]],
+    docs:["Leave sanction|0","Declared place of visit|0","Warrant (officer) + family tickets/fare receipts|0","Air tickets via authorised agent marked 'LTC' (if by air)|1","PNR / ticket numbers on bill|0","Boarding passes / self-declaration (air)|1","LTC advance + proof within 10 days (if drawn)|1","Controlling Officer countersignature (unless exempt)|0"],
+    note:"No DA on LTC. Family staying separately may instead visit you at duty station in the due year (your own entitlement then lapses). <i>(TR 177B.8)</i>"}
+};
+
+/* ---------- populate rank dropdown ---------- */
+const fService=document.getElementById('f_service'), fRank=document.getElementById('f_rank');
+function fillRanks(){
+  const list=RANKS[fService.value];
+  fRank.innerHTML=list.map((r,i)=>`<option value="${r[2]}" data-disp="${r[1]}">${r[0]} — Pay Level ${r[1]}</option>`).join('');
+}
+fService.addEventListener('change',fillRanks); fillRanks();
+
+/* ---------- generate ---------- */
+function val(id){return document.getElementById(id).value;}
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+function generate(scroll){
+  const name=esc(val('f_name'))||'(name not entered)';
+  const no=esc(val('f_no'));
+  const service=val('f_service');
+  const opt=fRank.options[fRank.selectedIndex];
+  const n=parseFloat(opt.value);
+  const lvl=opt.getAttribute('data-disp');
+  const rankTxt=opt.text.split(' — ')[0];
+  const post=val('f_post');
+  const claim=val('f_claim');
+  const modes=_arr(document.querySelectorAll('.mode:checked')).map(function(m){return m.value;});
+  const C=CLAIM[claim];
+
+  const isLTC = claim==='ltcH'||claim==='ltcA';
+  const exempt = n>=14; // Maj Gen / Rear Adm / AVM & above — Appendix D item 41
+
+  // ---- submission deadline (differs by claim type) ----
+  const dateStr=val('f_date'); const adv=val('f_adv');
+  function addDays(d,k){const x=new Date(d);x.setDate(x.getDate()+k);return x;}
+  function addMonths(d,k){const x=new Date(d);x.setMonth(x.getMonth()+k);return x;}
+  function fmt(d){return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+  let windowTxt, dueDate=null;
+  if(!isLTC){ windowTxt='within <b>60 days</b> of completion of the journey'; if(dateStr)dueDate=addDays(dateStr,60); }
+  else if(adv==='yes'){ windowTxt='within <b>1 month</b> of completing the return journey <span class="ref">(LTC advance drawn)</span>'; if(dateStr)dueDate=addMonths(dateStr,1); }
+  else { windowTxt='within <b>3 months</b> of completing the return journey <span class="ref">(no LTC advance)</span>'; if(dateStr)dueDate=addMonths(dateStr,3); }
+  let statusBadge='';
+  if(dueDate){
+    const today=new Date(); today.setHours(0,0,0,0);
+    const diff=Math.round((dueDate-today)/86400000);
+    if(diff<0) statusBadge=`<span class="badge over">⚠ Overdue by ${-diff} day(s) — claim may be forfeited; apply for condonation</span>`;
+    else if(diff<=10) statusBadge=`<span class="badge soon">Due in ${diff} day(s) — submit now</span>`;
+    else statusBadge=`<span class="badge ok">${diff} days left</span>`;
+  }
+  const bannerInner = dueDate
+    ? `Submit your claim <b>${windowTxt}</b> — i.e. by <b>${fmt(dueDate)}</b>. ${statusBadge}`
+    : `Submit your claim ${windowTxt}. <i>Enter the journey-completion date above to calculate your exact due date.</i>`;
+  const co=controllingOfficer(post,service);
+  const ca=competentAuthority(post);
+
+  // entitlement rows
+  const rows=[
+    ['rail','Rail',railClass(n),'TR 57'],
+    ['air','Air (domestic)',airClass(n),'TR 62'],
+    ['road','Road (RMA)',roadClass(n),'TR 61'],
+    ['sea','Sea',seaClass(n),'TR 58'],
+  ];
+  if(claim==='perm') rows.push(['','Baggage / personal effects',baggage(n),'TR 61A']);
+  rows.push(['','Daily Allowance (DA)', isLTC?'Not admissible on LTC journeys':(claim==='perm'?'Not admissible on permanent-duty moves for service personnel':'Admissible for entire absence on temporary duty; reduced if free board/lodging'), isLTC?'TR 176.1':(claim==='perm'?'TR 59':'TR 114')]);
+
+  const entRows=rows.map(r=>{
+    const hl = r[0] && modes.includes(r[0]) ? ' class="hi"':'';
+    return `<tr${hl}><td>${r[1]}</td><td>${r[2]} <span class="ref">(${r[3]})</span></td></tr>`;
+  }).join('');
+
+  // countersignature box
+  const csBox = exempt
+    ? `<div class="callout ok"><b>Countersignature NOT required</b>As an officer of the rank of Major General / Rear Admiral / Air Vice Marshal &amp; above, you may submit your TA/DA/LTC claim <b>without</b> a controlling officer's countersignature — but you cannot sanction your own move. <span class="ref">(Appendix D, item 41)</span></div>`
+    : `<div class="callout warn"><b>Countersignature REQUIRED</b>Your claim must be countersigned by your Controlling Officer (above) before submission, unless your specific appointment is listed in Appendix D (e.g. Bde/Sub-Area/Station Commanders). <span class="ref">(TR 6, Appendix D)</span></div>`;
+
+  // steps + docs
+  const stepsHtml=C.steps.map(s=>`<li><b>${s[0]}.</b> ${s[1]}</li>`).join('');
+  const docsHtml=C.docs.map(d=>{const [t,o]=d.split('|');return `<label><input type="checkbox"><span>${t} ${o==='1'?'<span class="opt">(if applicable)</span>':''}</span></label>`;}).join('');
+
+  // ---------- MONEY CALCULATOR ----------
+  const fromS=esc(val('f_from'))||'duty station';
+  const toS=esc(val('f_to'))||(isLTC?'home town / place of visit':(claim==='temp'?'TD station':'new station'));
+  const dist=parseFloat(val('f_dist'))||0;
+  const pay=parseFloat(val('f_pay'))||0;
+  const days=parseFloat(val('f_days'))||0;
+  const nights=parseFloat(val('f_nights'))||0;
+  const fare=parseFloat(val('f_fare'))||0;
+  const rmaKm=parseFloat(val('f_rmakm'))||0;
+  const rmaRate=val('f_rmamode')==='auto'?RMA_AUTO:RMA_CAR;
+  const rmaModeTxt=val('f_rmamode')==='auto'?'auto/scooter':'car/taxi';
+  const fromField=val('f_field')==='yes';
+  const island=val('f_island')==='yes';
+
+  let calcRows=[], total=0, calcNotes=[];
+  function add(label,amt,note){ calcRows.push([label,amt,note]); if(amt>0) total+=amt; }
+
+  // 1) Travel charges (all claim types)
+  if(fare>0) add('Travel charges (to & fro, rail/air)', fare, 'Estimate you entered. On the bill, claim the actual fare by entitled class / value of warrant.');
+  else calcRows.push(['Travel charges (to & fro, rail/air)', -1, 'Enter your estimated/actual to-&-fro fare above to include it. Claimed at actuals by entitled class.']);
+
+  if(claim==='temp'){
+    // 2) Food (DA lump-sum)
+    if(days>0){ add(`Food (DA) — ${days} day(s) × ${rupee(daFood(n))}`, daFood(n)*days, 'Lump-sum food component at full-day rate for your level. Part-days: <6h=30%, 6-12h=70%, >12h=100%. (TR 59)'); }
+    else calcRows.push(['Food (DA)', -1, `${rupee(daFood(n))}/day at your level — enter number of TD days above. (TR 59)`]);
+    // 3) Accommodation (hotel ceiling)
+    if(nights>0){ add(`Accommodation — ${nights} night(s) × up to ${rupee(hotelCeil(n))}`, hotelCeil(n)*nights, 'Hotel/lodging ceiling per day for your level; reimbursed up to this against bills/self-certification. (TR 59)'); }
+    else calcRows.push(['Accommodation (hotel)', -1, `Up to ${rupee(hotelCeil(n))}/night at your level — enter number of nights above. (TR 59)`]);
+  } else if(claim==='perm'){
+    // 2) CTG
+    if(pay>0){ const pct=island?1:0.8; add(`Composite Transfer Grant — ${island?'100%':'80%'} of basic pay`, pay*pct, 'On basic pay (exclude NPA & MSP). '+(island?'100% for A&N/Lakshadweep. ':'')+'One-third if move <20 km same city. (TR 67.2)'); }
+    else calcRows.push(['Composite Transfer Grant (CTG)', -1, `${island?'100%':'80%'} of last month basic pay — enter basic pay above. (TR 67.2)`]);
+    // 3) Baggage
+    const rate=baggageRoadRate(n);
+    if(fromField){
+      calcRows.push([`Baggage ex-${fromS} (field) — 100 kg only`, -1, 'From a field station only <b>100 kg</b> is admissible — at <b>actual</b> cost of moving 100 kg (a few hundred to ~₹1,500), not the full-load rate. Balance up to '+baggageKg(n)+' kg is claimable from your SPR/home town to '+toS+'. (TR 67.3f)']);
+      if(dist>0) calcNotes.push('If you move your full household by road from your SPR/home town to '+toS+', that leg ≈ '+rupee(rate)+'/km × its distance.');
+    } else if(dist>0){
+      add(`Baggage by road — ${rupee(rate)}/km × ${dist} km`, rate*dist, `Full entitled load (${baggageKg(n)} kg) by road, ${fromS} → ${toS}. By goods train it is charged on actual weight. (TR 61A)`);
+    } else {
+      calcRows.push(['Baggage by road', -1, `${rupee(rate)}/km × distance (your scale ${baggageKg(n)} kg) — enter distance above. (TR 61A)`]);
+    }
+    calcNotes.push('No DA (food/accommodation) on permanent-duty moves for service personnel. Transport of one car/motorcycle is extra at actual rail/steamer cost (TR 67.4).');
+  } else { // LTC
+    calcNotes.push('No DA (food/accommodation) is admissible on any LTC journey. Officer travels on warrant/Form ‘D’; family fares reimbursed (TR 177A/B). Enter your fare estimate above to total it.');
+  }
+
+  // 4) RMA — local/road travel (all claim types)
+  if(rmaKm>0){ add(`RMA (local/road travel) — ${rmaKm} km × ${rupee(rmaRate)} (${rmaModeTxt})`, rmaRate*rmaKm, 'Road mileage for duty-point ↔ station/airport & local legs. On rail-connected routes it is capped at the entitled rail fare. (TR 61)'); }
+  else calcRows.push(['RMA (local/road travel)', -1, `${rupee(RMA_CAR)}/km car-taxi or ${rupee(RMA_AUTO)}/km auto — enter road km above. Capped at rail fare on rail-connected routes. (TR 61)`]);
+
+  calcNotes.push('All rates rise 25% each time DA rises 50%. Figures are indicative — the PCDA(O) audit figure is final.');
+
+  const calcBody = calcRows.map(r=>{
+    const amt = r[1]<0 ? '<span class="ref">see note</span>' : `<b>${rupee(r[1])}</b>`;
+    return `<tr><td>${r[0]}</td><td style="text-align:right;white-space:nowrap">${amt}</td></tr>${r[2]?`<tr><td colspan="2" class="ref" style="padding-top:0">${r[2]}</td></tr>`:''}`;
+  }).join('');
+  const notesHtml = calcNotes.length? `<div class="callout ok" style="margin-top:6px"><b>Also allowed / notes</b>${calcNotes.join('<br>')}</div>`:'';
+  const advanceLine = total>0
+    ? `<div class="total-chip"><span style="font-size:30px">💰</span><div style="flex:1"><div class="lbl">Total indicative advance · ${esc(fromS)} → ${esc(toS)}</div><div class="big">${rupee(total)}</div><div style="font-size:11px;opacity:.92">sum of the heads below — fill any blank fields to refine it</div></div></div>`
+    : `<div class="callout warn"><b>Enter the figures above</b>Fill in travel charges, TD days/nights, distance, basic pay or RMA km to build the total advance.</div>`;
+
+  document.getElementById('out').innerHTML=`
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>Claim Sheet — ${C.title}</h2>
+      <div class="meta">
+        <span>${name}${no?' · '+no:''}</span>
+        <span>${esc(rankTxt)} · ${service}</span>
+        <span>Pay Level ${lvl}</span>
+        <span>Generated ${new Date().toLocaleDateString('en-GB')}</span>
+      </div>
+    </div>
+    <div class="deadline-banner"><span class="clk">⏰</span><span>${bannerInner}</span></div>
+
+    <div class="block">
+      <h3><span class="n">1</span> What is authorised — your travel entitlements</h3>
+      <table class="t"><tr><th>Mode</th><th>Your entitlement</th></tr>${entRows}</table>
+      <div class="callout ok" style="margin-top:12px"><b>Note</b>${C.note}</div>
+    </div>
+
+    <div class="block">
+      <h3><span class="n">2</span> How much you can draw — ${esc(fromS)} → ${esc(toS)}${dist?` (${dist} km)`:''}</h3>
+      ${advanceLine}
+      <table class="t"><tr><th>Head of claim</th><th style="text-align:right">Amount</th></tr>${calcBody}</table>
+      ${notesHtml}
+      <div class="callout warn" style="margin-top:6px"><b>Please note</b>Figures are <b>indicative</b>, on base TR 2025 rates (rail/air fare is claimed at actuals; rates rise 25% per 50% DA hike). Use this to size your <b>advance</b> and cross-check the final bill — the PCDA(O) audit figure prevails.</div>
+    </div>
+
+    <div class="block">
+      <h3><span class="n">3</span> Under which authority — who sanctions &amp; signs</h3>
+      <div class="auth-card">
+        <div class="role">Authority ordering the move</div>
+        <div class="who">Authority empowered under Appendix C</div>
+        <div class="desc">Issues your movement order / leave sanction that makes the journey "on duty". Attach a certified copy to the claim.</div>
+        <span class="pill">Appendix C · TR 4</span>
+      </div>
+      <div class="auth-card">
+        <div class="role">Controlling Officer (countersigns the bill)</div>
+        <div class="who">${co[0]}</div>
+        <div class="desc">${co[1]} May also waive production of cash receipts/boarding pass in genuine cases.</div>
+        <span class="pill">Appendix B · TR 6 &amp; 9</span>
+      </div>
+      <div class="auth-card">
+        <div class="role">Competent Authority (sanctions move / relaxations)</div>
+        <div class="who">${ca}</div>
+        <div class="desc">Needed for special concessions — extension of time limit, mode/class other than authorised, etc.</div>
+        <span class="pill">Appendix A · TR 2</span>
+      </div>
+      ${csBox}
+    </div>
+
+    <div class="block">
+      <h3><span class="n">4</span> How to file — step by step</h3>
+      <ol class="steps">${stepsHtml}</ol>
+    </div>
+
+    <div class="block">
+      <h3><span class="n">5</span> Documents to attach (tick as you assemble)</h3>
+      <div class="progwrap"><div class="progbar"><div class="progfill" id="docFill"></div></div><span class="progtxt" id="docTxt">0 / ${C.docs.length} ready</span></div>
+      <div class="check" id="docCheck">${docsHtml}</div>
+    </div>
+
+    <div class="block">
+      <h3><span class="n">6</span> Submission deadline &amp; time limits</h3>
+      <div class="callout warn"><b>Your deadline for this claim</b>Submit ${windowTxt}.${dueDate?` For your journey, that is <b>${fmt(dueDate)}</b>. ${statusBadge}`:''} The date reckoned is the <b>date of completion of the ${isLTC?'return ':''}journey</b> — mention it on your bill.</div>
+      <ol class="steps">
+        ${!isLTC?`<li><b>TA/DA on tour, transfer, training or retirement:</b> claim forfeited / deemed relinquished if not preferred within <b>60 days</b> of completion of journey. <i>(TR 17, Para 8(b))</i></li>
+        <li><b>Officer &amp; family travelling separately:</b> the 60 days is counted <b>separately</b> for each person's journey. <i>(Para 8(c))</i></li>
+        <li><b>Transport of personal effects / conveyance:</b> within <b>60 days</b> from the date they are actually delivered at the new station. <i>(Para 8(d))</i></li>
+        <li><b>Family &amp; baggage move:</b> within <b>6 months</b> of your move (transfer); <b>1 year</b> on retirement/discharge, extendable by Appendix J authority. <i>(TR 16)</i></li>`
+        :`<li><b>LTC with advance drawn:</b> adjustment claim within <b>1 month</b> of completing the return journey; else the advance is recovered in lump sum, after which the claim may be preferred within <b>3 months</b>. <i>(LTC Rules, Para 32(g))</i></li>
+        <li><b>LTC without advance:</b> submit within <b>3 months</b> of completing the return journey, else forfeited / deemed relinquished. <i>(Para 32(k))</i></li>
+        <li><b>Advance — refund / proof:</b> refund in full if outward journey not commenced within <b>30 days</b> of the advance; produce tickets within <b>10 days</b> of drawal. <i>(Para 32(f))</i></li>
+        <li><b>Air-LTC certificate/undertaking:</b> within <b>7 days</b> of the journey; TA bill may follow. <i>(TR 176 Note 10)</i></li>
+        <li><b>Family return journey:</b> within <b>6 months</b> of the onward journey (relaxable by Branch Heads / C-in-C). <i>(TR 177A/B)</i></li>`}
+        <li><b>Late submission:</b> the advance, if drawn, is recovered with <b>penal interest @ 2% over GPF rate</b>; extension/condonation needs the competent authority. <i>(TR 17A; LTC Para 32(l))</i></li>
+      </ol>
+    </div>
+  </div>`;
+  document.getElementById('out').classList.add('show');
+  bindDocProgress();
+  if(scroll!==false) document.getElementById('out').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// dynamic field labels + show/hide by claim type
+function updateLabels(){
+  const c=document.getElementById('f_claim').value;
+  const labFrom=document.getElementById('lab_from'), labTo=document.getElementById('lab_to');
+  const days=document.getElementById('wrap_days');
+  const nights=document.getElementById('wrap_nights');
+  const tdOnly = c==='temp' ? '' : 'none';
+  days.style.display=tdOnly; nights.style.display=tdOnly;
+  if(c==='temp'){ labFrom.textContent='Duty station (from)'; labTo.textContent='TD station (to)'; }
+  else if(c==='perm'){ labFrom.textContent='Duty station (from)'; labTo.textContent='New station (to)'; }
+  else { labFrom.textContent='Leave station (from)'; labTo.textContent='Home town / place of visit (to)'; }
+}
+document.getElementById('f_claim').addEventListener('change',updateLabels); updateLabels();
+
+try{
+// interactive claim tiles -> drive hidden select
+document.querySelectorAll('#claimTiles .ctile').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('#claimTiles .ctile').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const s=document.getElementById('f_claim'); s.value=t.dataset.v;
+    s.dispatchEvent(new Event('change'));
+  });
+});
+// interactive service segmented control -> drive hidden select
+document.querySelectorAll('#svcSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#svcSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const s=document.getElementById('f_service'); s.value=b.dataset.v;
+    s.dispatchEvent(new Event('change'));
+  });
+});
+}catch(e){}
+// live document checklist progress bar (delegated, re-bound each render)
+function bindDocProgress(){
+  const box=document.getElementById('docCheck'); if(!box) return;
+  const fill=document.getElementById('docFill'), txt=document.getElementById('docTxt');
+  const boxes=box.querySelectorAll('input[type=checkbox]');
+  const upd=()=>{ const done=_arr(boxes).filter(function(b){return b.checked;}).length; const pct=boxes.length?Math.round(done/boxes.length*100):0;
+    fill.style.width=pct+'%'; txt.textContent=`${done} / ${boxes.length} ready`;
+    if(done===boxes.length&&boxes.length){ txt.textContent='✓ All documents ready'; txt.style.color='var(--ok)'; } else { txt.style.color='var(--accent-d)'; } };
+  boxes.forEach(b=>b.addEventListener('change',upd)); upd();
+}
+
+document.getElementById('genBtn').addEventListener('click',()=>generate(true));
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+// live update once the sheet exists
+['f_name','f_no','f_service','f_rank','f_post','f_claim','f_date','f_adv',
+ 'f_from','f_to','f_dist','f_pay','f_days','f_nights','f_fare','f_rmakm','f_rmamode','f_field','f_island'].forEach(id=>{
+  const el=document.getElementById(id); if(!el) return;
+  el.addEventListener('change',()=>{ if(document.getElementById('out').classList.contains('show')) generate(false); });
+  el.addEventListener('input',()=>{ if(document.getElementById('out').classList.contains('show')) generate(false); });
+});
+document.querySelectorAll('.mode').forEach(m=>m.addEventListener('change',()=>{ if(document.getElementById('out').classList.contains('show')) generate(false); }));
+</script>
+</body>
+</html>
