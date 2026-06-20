@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TA / DA / LTC दावा सहायक — JCO/OR (यात्रा विनियम 2025)</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="दावा सहायक">
+<meta name="theme-color" content="#134474">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23134474%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2718%27 text-anchor=%27middle%27 fill=%27white%27%3E%E2%82%B9%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0f1d2e;--panel:#fff;--ink:#1a2433;--muted:#5b6b7f;--line:#e2e8f0;
+    --accent:#1b5e9c;--accent-d:#134474;--soft:#eef4fb;--ok:#127a4a;--okbg:#e7f6ee;
+    --warn:#b4541a;--warnbg:#fdf0e6;--chip:#dde9f6;--hi:#fff7df;--hiln:#e8cf7a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Devanagari",Arial,sans-serif;color:var(--ink);background:#f3f6fa;line-height:1.6}
+  header{background:linear-gradient(135deg,var(--accent-d),var(--accent));color:#fff;padding:24px 22px;position:relative;overflow:hidden}
+  header::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07)}
+  header h1{margin:0;font-size:21px;display:flex;align-items:center;gap:10px}
+  header h1::before{content:"🧾";font-size:24px}
+  header p{margin:6px 0 0;font-size:13px;opacity:.92}
+  .tagline{display:inline-block;background:rgba(255,255,255,.16);padding:3px 10px;border-radius:20px;font-size:12px;margin-top:10px}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 18px 60px}
+  .form{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:18px}
+  .form h2{margin:0 0 4px;font-size:17px;color:var(--accent-d)}
+  .form .hint{font-size:12px;color:var(--muted);margin:0 0 16px}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:5px}
+  .field input,.field select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;color:var(--ink);transition:border-color .15s, box-shadow .15s}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(27,94,156,.12)}
+  .modes{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+  .modes label{display:flex;gap:6px;align-items:center;font-size:14px;font-weight:600;color:var(--ink)}
+  .modes input{width:17px;height:17px;accent-color:var(--accent)}
+  .gen-row{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:#fff;color:var(--accent-d);font-weight:600;font-size:15px;padding:12px 18px;border-radius:10px;cursor:pointer;transition:transform .12s,background .15s,box-shadow .15s}
+  .btn:active{transform:scale(.96)}
+  .btn:hover{background:var(--soft)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 14px rgba(27,94,156,.3)}
+  .btn.primary:hover{background:var(--accent-d);transform:translateY(-1px)}
+
+  .claim-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:2px 0 4px}
+  .ctile{border:2px solid var(--line);border-radius:13px;padding:14px 12px;cursor:pointer;background:#fff;text-align:right;transition:transform .15s,border-color .15s,box-shadow .15s;position:relative}
+  .ctile:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(20,68,116,.13);border-color:#a9c6e4}
+  .ctile.active{border-color:var(--accent);background:linear-gradient(180deg,#f3f8fd,#eaf2fb)}
+  .ctile.active::after{content:"✓";position:absolute;top:8px;right:10px;width:20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .ctile .ico{font-size:22px}
+  .ctile .ti{font-weight:700;font-size:14px;color:var(--accent-d);margin:7px 0 2px;text-align:right}
+  .ctile .su{font-size:11.5px;color:var(--muted)}
+  .seg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px}
+  .seg button{border:none;background:transparent;padding:9px 16px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+  .seg button.on{background:#fff;color:var(--accent-d);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+  #out{display:none;margin-top:22px}
+  #out.show{display:block}
+  #out.show .block{opacity:0;animation:rise .45s ease forwards}
+  #out.show .block:nth-child(3){animation-delay:.05s}
+  #out.show .block:nth-child(4){animation-delay:.1s}
+  #out.show .block:nth-child(5){animation-delay:.15s}
+  #out.show .block:nth-child(6){animation-delay:.2s}
+  #out.show .block:nth-child(7){animation-delay:.25s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .sheet-head{background:linear-gradient(135deg,var(--accent-d),var(--accent));color:#fff;padding:18px 22px}
+  .sheet-head h2{margin:0;font-size:18px}
+  .sheet-head .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+  .sheet-head .meta span{background:rgba(255,255,255,.16);padding:3px 10px;border-radius:7px;font-size:12px}
+  .deadline-banner{background:#fff7df;border-bottom:1px solid var(--hiln);padding:13px 22px;font-size:14px;color:#5d4912;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .deadline-banner .clk{font-size:20px}
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .badge.ok{background:var(--okbg);color:var(--ok)}
+  .badge.soon{background:var(--warnbg);color:var(--warn)}
+  .badge.over{background:#fde7e7;color:#b42323}
+  .block{padding:18px 22px;border-bottom:1px solid var(--line)}
+  .block:last-child{border-bottom:none}
+  .block h3{margin:0 0 12px;font-size:15.5px;color:var(--accent-d);display:flex;align-items:center;gap:9px}
+  .block h3 .n{width:25px;height:25px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent-d));color:#fff;font-weight:700;display:grid;place-items:center;font-size:13px;flex:none}
+  table.t{width:100%;border-collapse:collapse;font-size:14px}
+  table.t th,table.t td{text-align:right;padding:10px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.t th{background:var(--soft);color:var(--accent-d);font-size:12px}
+  table.t td:first-child{font-weight:600;width:34%}
+  table.t td .ref{color:var(--muted);font-size:11.5px}
+  tr.hi td{background:var(--hi)}
+  .auth-card{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+  .auth-card .role{font-size:11.5px;color:var(--muted);font-weight:700}
+  .auth-card .who{font-size:15.5px;font-weight:700;color:var(--accent-d);margin:2px 0 3px}
+  .auth-card .desc{font-size:13px;color:var(--ink)}
+  .auth-card .pill{display:inline-block;font-size:11px;font-weight:700;background:var(--chip);color:var(--accent-d);padding:2px 8px;border-radius:6px;margin-top:6px}
+  .callout{border-radius:9px;padding:12px 14px;font-size:13.5px;margin:8px 0;border:1px solid}
+  .callout.ok{background:var(--okbg);border-color:#aee0c4;color:#0c5536}
+  .callout.warn{background:var(--warnbg);border-color:#f0c9a8;color:#7a3b12}
+  .callout b{display:block;margin-bottom:2px}
+  ol.steps{margin:0;padding-right:18px;padding-left:0}
+  ol.steps li{margin:0 0 11px}
+  ol.steps li b{color:var(--accent-d)}
+  .check label{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:14px}
+  .check label:hover{background:var(--soft)}
+  .check input{margin-top:4px;width:17px;height:17px;flex:none;accent-color:var(--accent)}
+  .check input:checked + span{color:var(--muted);text-decoration:line-through}
+  .opt{font-style:italic;color:var(--muted);font-size:12.5px}
+  .progwrap{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .progbar{flex:1;height:9px;background:var(--soft);border-radius:20px;overflow:hidden}
+  .progfill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--ok));border-radius:20px;transition:width .4s}
+  .progtxt{font-size:12.5px;font-weight:700;color:var(--accent-d);white-space:nowrap}
+  .total-chip{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#0e7a48,#149a5b);color:#fff;border-radius:14px;padding:16px 20px;margin:4px 0 12px;box-shadow:0 6px 20px rgba(14,122,72,.28)}
+  .total-chip .big{font-size:26px;font-weight:800;animation:pop .4s ease}
+  .total-chip .lbl{font-size:12.5px;opacity:.92}
+  @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+  footer{font-size:11.5px;color:var(--muted);text-align:center;padding:20px;max-width:1080px;margin:0 auto;line-height:1.7}
+  @media(max-width:560px){.wrap{padding:14px 12px 50px}.btn{flex:1;text-align:center}.total-chip .big{font-size:22px}}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+  @media print{.form,.gen-row,header .tagline{display:none}header,.sheet-head{background:#134474 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}#out{display:block !important;margin-top:0}.sheet{border:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding-bottom:0">
+    <h1>TA / DA / LTC दावा सहायक</h1>
+    <p>JCO एवं OR (व्यक्तियों) के लिए — रक्षा सेवा यात्रा विनियम, संस्करण 2025 के आधार पर। अपना विवरण भरें और अपनी हकदारी, प्राधिकारी, चरण एवं अग्रिम राशि पाएँ।</p>
+    <span class="tagline">विवरण भरें → "दावा पत्र बनाएँ" दबाएँ → प्रिंट / सेव करें</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="form">
+    <h2>आपका विवरण</h2>
+    <p class="hint">हकदारी आपके <b>वेतन स्तर (Pay Level)</b> के अनुसार तय होती है; रैंक चुनने पर यह स्वतः सेट हो जाती है। प्राधिकारी आपकी तैनाती के अनुसार आते हैं।</p>
+    <div class="fgrid">
+      <div class="field"><label>नाम</label><input id="f_name" placeholder="रैंक एवं नाम"></div>
+      <div class="field"><label>सेना संख्या / Personal No.</label><input id="f_no" placeholder="वैकल्पिक"></div>
+      <div class="field"><label>सेवा (Service)</label>
+        <div class="seg" id="svcSeg">
+          <button type="button" class="on" data-v="थल सेना">थल सेना</button>
+          <button type="button" data-v="नौसेना">नौसेना</button>
+          <button type="button" data-v="वायु सेना">वायु&nbsp;सेना</button>
+        </div>
+        <select id="f_service" style="display:none">
+          <option value="थल सेना">थल सेना</option>
+          <option value="नौसेना">नौसेना</option>
+          <option value="वायु सेना">वायु सेना</option>
+        </select></div>
+      <div class="field"><label>रैंक / वेतन स्तर</label>
+        <select id="f_rank"></select></div>
+      <div class="field"><label>आप कहाँ तैनात हैं (प्राधिकारी हेतु)</label>
+        <select id="f_post">
+          <option value="unit" selected>यूनिट (Station Commander के अधीन)</option>
+          <option value="fieldunit">फील्ड / ऑपरेशनल यूनिट</option>
+          <option value="hq">फॉर्मेशन / HQ में तैनात</option>
+          <option value="ship">जहाज़ / नौसैनिक प्रतिष्ठान</option>
+          <option value="afstn">वायु सेना स्टेशन / यूनिट</option>
+        </select></div>
+      <div class="field" style="grid-column:1/-1"><label>दावे का प्रकार — एक चुनें</label>
+        <div class="claim-tiles" id="claimTiles">
+          <button type="button" class="ctile active" data-v="temp"><div class="ico">🧳</div><div class="ti">TA / DA · अस्थायी ड्यूटी</div><div class="su">कोर्स · कोर्ट · ड्यूटी मूव</div></button>
+          <button type="button" class="ctile" data-v="perm"><div class="ico">📦</div><div class="ti">TA · स्थायी ड्यूटी</div><div class="su">पोस्टिंग / तबादला</div></button>
+          <button type="button" class="ctile" data-v="ltcH"><div class="ico">🏠</div><div class="ti">LTC · गृह नगर / SPR</div><div class="su">TR 184 · प्रति वर्ष</div></button>
+          <button type="button" class="ctile" data-v="ltcA"><div class="ico">🗺️</div><div class="ti">LTC · अन्यत्र (भारत में)</div><div class="su">TR 184 · वैकल्पिक वर्ष</div></button>
+        </div>
+        <select id="f_claim" style="display:none">
+          <option value="temp">TA / DA — अस्थायी ड्यूटी</option>
+          <option value="perm">TA — स्थायी ड्यूटी / तबादला</option>
+          <option value="ltcH">LTC — गृह नगर / SPR</option>
+          <option value="ltcA">LTC — अन्यत्र (भारत में)</option>
+        </select></div>
+      <div class="field"><label>यात्रा पूरी होने की तारीख <span style="color:var(--accent);font-weight:600">(समय सीमा हेतु)</span></label><input type="date" id="f_date"></div>
+      <div class="field"><label>क्या LTC अग्रिम लिया गया? <span style="font-weight:400">(केवल LTC)</span></label>
+        <select id="f_adv">
+          <option value="no">नहीं — अग्रिम नहीं लिया</option>
+          <option value="yes">हाँ — अग्रिम लिया</option>
+        </select></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>यात्रा का साधन (आपकी हकदारी हाइलाइट होगी)</label>
+      <div class="modes">
+        <label><input type="checkbox" class="mode" value="air">वायु</label>
+        <label><input type="checkbox" class="mode" value="rail" checked>रेल</label>
+        <label><input type="checkbox" class="mode" value="road">सड़क</label>
+        <label><input type="checkbox" class="mode" value="sea">समुद्र</label>
+      </div>
+    </div>
+
+    <h2 style="margin:22px 0 4px;font-size:15px">यात्रा एवं राशि <span style="font-weight:400;font-size:12px;color:var(--muted)">— हकदारी एवं अग्रिम अनुमान हेतु</span></h2>
+    <div class="fgrid">
+      <div class="field"><label id="lab_from">ड्यूटी स्टेशन (से)</label><input id="f_from" placeholder="जैसे लेह"></div>
+      <div class="field"><label id="lab_to">TD स्टेशन (तक)</label><input id="f_to" placeholder="जैसे कोटा"></div>
+      <div class="field"><label>दूरी (किमी) — सड़क, सबसे छोटा मार्ग</label><input id="f_dist" type="number" min="0" placeholder="जैसे 1400"></div>
+      <div class="field"><label>पिछले माह का मूल वेतन (₹) <span style="font-weight:400">(CTG हेतु, केवल स्थायी ड्यूटी)</span></label><input id="f_pay" type="number" min="0" placeholder="जैसे 45800"></div>
+      <div class="field" id="wrap_days"><label>अस्थायी ड्यूटी के दिन <span style="font-weight:400">(भोजन/DA, केवल TD)</span></label><input id="f_days" type="number" min="0" placeholder="जैसे 5"></div>
+      <div class="field" id="wrap_nights"><label>होटल/ठहराव की रातें <span style="font-weight:400">(आवास, केवल TD)</span></label><input id="f_nights" type="number" min="0" placeholder="जैसे 4"></div>
+      <div class="field"><label>अनुमानित आने-जाने का किराया (₹) <span style="font-weight:400">(रेल/वायु)</span></label><input id="f_fare" type="number" min="0" placeholder="जैसे 4000"></div>
+      <div class="field"><label>स्थानीय/सड़क यात्रा RMA हेतु (किमी)</label><input id="f_rmakm" type="number" min="0" placeholder="जैसे 20"></div>
+      <div class="field"><label>RMA साधन</label>
+        <select id="f_rmamode">
+          <option value="auto">ऑटो / अपना स्कूटर (₹12/किमी)</option>
+          <option value="car">अपनी कार / टैक्सी (₹24/किमी)</option>
+        </select></div>
+      <div class="field"><label>क्या फील्ड / रियायती क्षेत्र से मूव?</label>
+        <select id="f_field">
+          <option value="no">नहीं — सामान्य शांति-से-शांति मूव</option>
+          <option value="yes">हाँ — फील्ड/रियायती क्षेत्र से</option>
+        </select></div>
+      <div class="field"><label>द्वीप मूव (A&amp;N / लक्षद्वीप)?</label>
+        <select id="f_island">
+          <option value="no">नहीं</option>
+          <option value="yes">हाँ — A&amp;N या लक्षद्वीप से/तक</option>
+        </select></div>
+    </div>
+
+    <div class="gen-row">
+      <button class="btn primary" id="genBtn">दावा पत्र बनाएँ</button>
+      <button class="btn" id="printBtn">🖨️ प्रिंट / PDF सेव करें</button>
+    </div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<footer>
+  यह सहायक <b>रक्षा सेवा यात्रा विनियम, संस्करण 2025</b> से तैयार किया गया है (मतभेद की स्थिति में अंग्रेज़ी संस्करण मान्य होगा)। हकदारी: TR 57 (रेल), 58 (समुद्र), 61/61A (सड़क एवं सामान), 62 (वायु), 59/114 (DA); JCO/OR LTC: TR 184। प्राधिकारी: परिशिष्ट A/B/C। यह केवल एक सहायक उपकरण है — दावा प्रस्तुत करने से पहले संबंधित नियम एवं अपनी यूनिट के आदेश अवश्य जाँच लें। अंतिम राशि PAO/लेखा कार्यालय द्वारा तय की जाएगी।
+</footer>
+
+<script>
+if(window.NodeList&&!NodeList.prototype.forEach){NodeList.prototype.forEach=Array.prototype.forEach;}
+function _arr(x){return Array.prototype.slice.call(x);}
+
+/* JCO/OR रैंक → वेतन स्तर */
+const RANKS = {
+  "थल सेना":[
+    ["सिपाही (Sepoy)","3",3],["लांस नायक (L/Nk)","3",3.1],["नायक (Naik)","4",4],
+    ["हवलदार (Havildar)","5",5],["नायब सूबेदार (Nb Sub)","6",6],["सूबेदार (Subedar)","7",7],
+    ["सूबेदार मेजर (Sub Maj)","8",8],["मानद लेफ्टिनेंट","10",10],["मानद कैप्टन","10 B",10.5]
+  ],
+  "नौसेना":[
+    ["सीमैन (Seaman)","3",3],["लीडिंग सीमैन","5",5],["पेटी ऑफिसर (PO)","6",6],
+    ["चीफ पेटी ऑफिसर (CPO)","7",7],["मास्टर CPO","8",8],["मानद SLt","10",10]
+  ],
+  "वायु सेना":[
+    ["एयरमैन (AC/LAC)","3",3],["कॉर्पोरल","4",4],["सार्जेंट (Sgt)","5",5],
+    ["जूनियर वारंट ऑफिसर","6",6],["वारंट ऑफिसर","7",7],["मास्टर वारंट ऑफिसर","8",8],["मानद Flt Lt","10",10]
+  ]
+};
+
+/* हकदारी (वेतन स्तर अनुसार) */
+function railClass(n){ if(n>=5.5)return"AC द्वितीय श्रेणी (AC-II) / चेयर कार (शताब्दी)"; return"AC तृतीय श्रेणी (AC-III) / चेयर कार"; }
+function airClass(n){ if(n>=5.5)return"इकॉनमी श्रेणी"; return"वायु यात्रा की पात्रता नहीं — हकदार रेल किराए की प्रतिपूर्ति (सबसे छोटा मार्ग)"; }
+function seaClass(n){ if(n>=5.5)return"निचली/द्वितीय श्रेणी"; if(n>=4)return"मध्य/द्वितीय श्रेणी"; return"सबसे निचली श्रेणी"; }
+function roadClass(n){
+  if(n>=5.5)return"AC बस सहित कोई भी पब्लिक बस; या नॉन-AC टैक्सी / ऑटो-रिक्शा निर्धारित दर पर";
+  if(n>=4)return"AC बस को छोड़कर कोई भी पब्लिक बस; या ऑटो-रिक्शा निर्धारित दर पर";
+  return"केवल साधारण पब्लिक बस; या ऑटो-रिक्शा निर्धारित दर पर";
+}
+function baggage(n){
+  if(n>=5.5)return"6000 किग्रा गुड्स ट्रेन / 1 कंटेनर — या ₹50 प्रति किमी सड़क द्वारा";
+  if(n>=5)return"3000 किग्रा — या ₹25 प्रति किमी सड़क द्वारा";
+  return"1500 किग्रा — या ₹15 प्रति किमी सड़क द्वारा";
+}
+function baggageRoadRate(n){ if(n>=5.5)return 50; if(n>=5)return 25; return 15; }
+function baggageKg(n){ if(n>=5.5)return 6000; if(n>=5)return 3000; return 1500; }
+function daFood(n){ if(n>=5.5)return 800; return 500; }     // ₹/दिन (TR 59) — L6-8 / L3-5
+function hotelCeil(n){ if(n>=5.5)return 750; return 450; }  // ₹/दिन सीमा
+const RMA_CAR=24, RMA_AUTO=12;
+function rupee(x){ return '₹' + Math.round(x).toLocaleString('en-IN'); }
+
+/* प्राधिकारी (JCO/OR) */
+function controllingOfficer(post){
+  const m={
+    unit:["आपकी यूनिट के OC / Station Commander","यूनिट के अधीन व्यक्ति — परिशिष्ट B।"],
+    fieldunit:["यूनिट के OC / कमान अधिकारी","फील्ड/ऑपरेशनल यूनिट — परिशिष्ट B।"],
+    hq:["शाखा प्रमुख / OC","फॉर्मेशन/HQ में तैनात — परिशिष्ट B।"],
+    ship:["कमांडिंग ऑफिसर (Cdr एवं ऊपर) / FOC","नौसेना कार्मिक — परिशिष्ट B, मद 15।"],
+    afstn:["वायु सेना स्टेशन के OC","वायु सेना यूनिट — परिशिष्ट B।"]
+  };
+  return m[post]||m.unit;
+}
+function competentAuthority(post){
+  const m={
+    unit:"आपके Station/Formation Commander अथवा GOC-in-C कमान (परिशिष्ट A)।",
+    fieldunit:"जिस GOC-in-C/कोर/एरिया कमांडर के अधीन आप हैं (परिशिष्ट A)।",
+    hq:"आपके फॉर्मेशन के GOC-in-C / प्रधान स्टाफ अधिकारी (परिशिष्ट A)।",
+    ship:"आपकी नौसैनिक कमान के FOC-in-C (परिशिष्ट A)।",
+    afstn:"आपकी कमान के AOC-in-C (परिशिष्ट A)।"
+  };
+  return m[post]||m.unit;
+}
+
+/* दावा प्रकार — चरण एवं दस्तावेज़ (JCO/OR) */
+const CLAIM={
+  temp:{title:"TA / DA — अस्थायी ड्यूटी",
+    steps:[
+      ["मूव आदेश की पुष्टि","ड्यूटी सक्षम प्राधिकारी (परिशिष्ट C) द्वारा अधिकृत हो; मूवमेंट ऑर्डर की प्रमाणित प्रति लें। <i>(TR 4, 6)</i>"],
+      ["अग्रिम लें (वैकल्पिक)","निकलने से पहले PAO के माध्यम से TA + DA अग्रिम का अनुरोध करें। <i>(TR 17.1)</i>"],
+      ["हकदार श्रेणी से यात्रा","अपनी हकदार श्रेणी से यात्रा करें। सरकारी खर्च पर वायु टिकट केवल BLCL / Ashok Travels / IRCTC से। सभी टिकट, बोर्डिंग पास एवं रसीदें रखें। <i>(अध्याय 3, TR 62)</i>"],
+      ["TA बिल तैयार करें","यात्रा का विवरण, माइलेज, ठहराव के दिनों का DA भरें। बोर्डिंग पास खो जाने पर PNR/टिकट सं. सहित स्व-घोषणा प्रमाणपत्र दें। <i>(TR 23)</i>"],
+      ["प्रतिहस्ताक्षर कराएँ","नीचे प्रतिहस्ताक्षर बॉक्स देखें — JCO/OR को हमेशा नियंत्रक अधिकारी का प्रतिहस्ताक्षर आवश्यक है। <i>(TR 6)</i>"],
+      ["जमा करें एवं अग्रिम समायोजित करें","यात्रा पूरी होने पर OC यूनिट के माध्यम से PAO को बिल भेजें; अग्रिम इसी बिल में समायोजित होगा। <i>(TR 17, टिप्पणी 3)</i>"]],
+    docs:["मूवमेंट ऑर्डर (प्रमाणित प्रति)|0","रेल/सड़क/वायु/समुद्र टिकट|0","बोर्डिंग पास (वायु)|1","बोर्डिंग पास के बदले स्व-घोषणा (यदि खोया)|1","किराया/स्थानीय रसीदें|0","TA + DA अग्रिम विवरण (यदि लिया)|1","नियंत्रक अधिकारी का प्रतिहस्ताक्षर|0","सक्षम प्राधिकारी की मंज़ूरी (केवल छूट का दावा हो तो)|1"],
+    note:"ठहराव के दिनों का DA: नि:शुल्क भोजन एवं आवास मिलने पर 25% DA; नि:शुल्क भोजन न मिलने पर 50% DA + राशन मनी। <i>(TR 59/114, JCO/OR)</i>"},
+  perm:{title:"TA — स्थायी ड्यूटी / तबादला",
+    steps:[
+      ["पोस्टिंग एवं ग्रेड की पुष्टि","मूव परिशिष्ट C के अधीन अधिकृत हो; TA ग्रेड तबादले की तारीख के तथ्यों से तय होता है। <i>(TR 16.4)</i>"],
+      ["अग्रिम लें (वैकल्पिक)","PAO के माध्यम से TA अग्रिम; परिवार लियन अवधि में आगे/पीछे यात्रा कर सकता है। <i>(TR 17)</i>"],
+      ["परिवार एवं सामान लियन में ले जाएँ","आपके मूव के 6 माह के भीतर (सक्षम प्राधिकारी द्वारा बढ़ाई जा सकती); हकदार वज़न सीमा में। <i>(TR 16, 61A)</i>"],
+      ["खर्च के प्रमाण जुटाएँ","सामान परिवहन के दावे के लिए रसीदें आवश्यक; नियंत्रक अधिकारी वास्तविक मामलों में छूट दे सकते हैं। <i>(TR 23.2)</i>"],
+      ["पूर्ण TA दावा तैयार करें","परिवार के मूव एवं सामान/वाहन परिवहन का पूरा विवरण दें। <i>(TR 23.1)</i>"],
+      ["प्रतिहस्ताक्षर एवं जमा","नियंत्रक अधिकारी का प्रतिहस्ताक्षर लें; परिवार का दावा तब तक स्वीकार नहीं होगा जब तक आप स्वयं मूव न कर लें। <i>(TR 16.6)</i>"]],
+    docs:["पोस्टिंग/मूवमेंट ऑर्डर (प्रमाणित प्रति)|0","स्वयं, परिवार एवं सामान के टिकट|0","सामान परिवहन की रसीदें|0","वज़न विवरण (हकदार सीमा में)|0","निजी वाहन परिवहन रसीदें, यदि दावा हो|1","TA अग्रिम विवरण (यदि लिया)|1","नियंत्रक अधिकारी का प्रतिहस्ताक्षर|0","सक्षम प्राधिकारी की मंज़ूरी (छूट/समय बढ़ाने हेतु)|1"],
+    note:"स्थायी ड्यूटी मूव पर सेवारत कार्मिक को DA देय नहीं। तबादले की तारीख के बाद जोड़े गए परिवार सदस्य को TA देय नहीं। <i>(TR 59, 16)</i>"},
+  ltcH:{title:"LTC — गृह नगर / SPR (TR 184)",
+    steps:[
+      ["पात्रता एवं वर्ष जाँचें","वार्षिक/आकस्मिक अवकाश पर प्रति वर्ष एक बार गृह नगर/SPR हेतु वारंट पर मुफ्त यात्रा। <i>(TR 184.1)</i>"],
+      ["अवकाश एवं अग्रिम","अवकाश लें। परिवार वारंट/नकद TA पर यात्रा कर सकता है। अग्रिम टिकट लागत का 80% तक। <i>(TR 184, टिप्पणी 2)</i>"],
+      ["हकदार साधन से यात्रा","आप वारंट/Form 'D' पर; परिवार को किराया प्रतिपूर्ति। LTC पर DA देय नहीं। <i>(TR 184, 176)</i>"],
+      ["वापसी 6 माह में पूरी करें","परिवार की वापसी यात्रा प्रारंभिक यात्रा से 6 माह के भीतर पूरी हो। <i>(TR 184.11)</i>"],
+      ["LTC दावा तैयार करें","PNR/टिकट सं. लिखें; नियंत्रक अधिकारी वास्तविक मामलों में नकद रसीद की छूट दे सकते हैं। <i>(TR 23.3)</i>"],
+      ["प्रतिहस्ताक्षर एवं जमा","नियंत्रक अधिकारी का प्रतिहस्ताक्षर लें; वायु से जाने पर 7 दिन में प्रमाणपत्र दें। <i>(TR 176 टिप्पणी 10)</i>"]],
+    docs:["अवकाश मंज़ूरी|0","गृह नगर / SPR घोषणा|0","वारंट / Form 'D' (स्वयं) एवं परिवार टिकट|0","अधिकृत एजेंट से 'LTC' अंकित वायु टिकट (यदि वायु से)|1","बिल पर PNR / टिकट सं.|0","बोर्डिंग पास / स्व-घोषणा (वायु)|1","LTC अग्रिम + 10 दिन में टिकट प्रमाण (यदि लिया)|1","नियंत्रक अधिकारी का प्रतिहस्ताक्षर|0"],
+    note:"गृह नगर LTC के वर्ष में, अलग रह रहा परिवार इसके बदले आपसे ड्यूटी स्टेशन पर मिल सकता है (उस वर्ष आपकी हकदारी समाप्त)। LTC पर DA देय नहीं। <i>(TR 184)</i>"},
+  ltcA:{title:"LTC — अन्यत्र, भारत में (TR 184.3)",
+    steps:[
+      ["वैकल्पिक वर्ष की पुष्टि","हर वैकल्पिक वर्ष में एक बार गृह स्टेशन के बजाय किसी अन्य अवकाश स्थल हेतु विकल्प। <i>(TR 184.3)</i>"],
+      ["अवकाश एवं अग्रिम","वार्षिक/आकस्मिक अवकाश पर। परिवार वारंट/नकद TA पर। अग्रिम टिकट लागत का 80% तक। <i>(TR 184)</i>"],
+      ["हकदार साधन से यात्रा","आप वारंट पर; परिवार को किराया प्रतिपूर्ति। यह उस वर्ष के मुफ्त वारंट के अतिरिक्त नहीं है। <i>(TR 184.3)</i>"],
+      ["अलगाव के नियम","यदि परिवार अलग रहता है (नॉन-फैमिली स्टेशन), तो उनके निवास से अवकाश स्थल तक यात्रा, हकदार श्रेणी सबसे छोटे मार्ग तक सीमित। <i>(TR 184.3)</i>"],
+      ["वापसी 6 माह में एवं दावा तैयार करें","6 माह में वापसी; PNR/टिकट सं. लिखें; नियंत्रक अधिकारी रसीद की छूट दे सकते हैं। <i>(TR 23.3)</i>"],
+      ["प्रतिहस्ताक्षर एवं जमा","नियंत्रक अधिकारी का प्रतिहस्ताक्षर लें; वायु से जाने पर 7 दिन में प्रमाणपत्र। <i>(TR 176 टिप्पणी 10)</i>"]],
+    docs:["अवकाश मंज़ूरी|0","घोषित यात्रा स्थल|0","वारंट (स्वयं) + परिवार टिकट/रसीदें|0","अधिकृत एजेंट से 'LTC' अंकित वायु टिकट (यदि वायु से)|1","बिल पर PNR / टिकट सं.|0","बोर्डिंग पास / स्व-घोषणा (वायु)|1","LTC अग्रिम + 10 दिन में प्रमाण (यदि लिया)|1","नियंत्रक अधिकारी का प्रतिहस्ताक्षर|0"],
+    note:"LTC पर DA देय नहीं। यह वैकल्पिक वर्ष की सुविधा है (TR 184.3); उस वर्ष के गृह-नगर वारंट के बदले में। <i>(TR 184.3)</i>"}
+};
+
+const fService=document.getElementById('f_service'), fRank=document.getElementById('f_rank');
+function fillRanks(){
+  const list=RANKS[fService.value];
+  fRank.innerHTML=list.map(function(r){return '<option value="'+r[2]+'" data-disp="'+r[1]+'">'+r[0]+' — वेतन स्तर '+r[1]+'</option>';}).join('');
+}
+fService.addEventListener('change',fillRanks); fillRanks();
+
+function val(id){return document.getElementById(id).value;}
+function esc(s){return (s||'').replace(/[&<>]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c];});}
+
+function generate(scroll){
+  const name=esc(val('f_name'))||'(नाम नहीं भरा)';
+  const no=esc(val('f_no'));
+  const service=val('f_service');
+  const opt=fRank.options[fRank.selectedIndex];
+  const n=parseFloat(opt.value);
+  const lvl=opt.getAttribute('data-disp');
+  const rankTxt=opt.text.split(' — ')[0];
+  const post=val('f_post');
+  const claim=val('f_claim');
+  const modes=_arr(document.querySelectorAll('.mode:checked')).map(function(m){return m.value;});
+  const C=CLAIM[claim];
+  const isLTC = claim==='ltcH'||claim==='ltcA';
+
+  const dateStr=val('f_date'); const adv=val('f_adv');
+  function addDays(d,k){const x=new Date(d);x.setDate(x.getDate()+k);return x;}
+  function addMonths(d,k){const x=new Date(d);x.setMonth(x.getMonth()+k);return x;}
+  function fmt(d){return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+  let windowTxt, dueDate=null;
+  if(!isLTC){ windowTxt='यात्रा पूरी होने के <b>60 दिन</b> के भीतर'; if(dateStr)dueDate=addDays(dateStr,60); }
+  else if(adv==='yes'){ windowTxt='वापसी यात्रा पूरी होने के <b>1 माह</b> के भीतर <span class="ref">(LTC अग्रिम लिया)</span>'; if(dateStr)dueDate=addMonths(dateStr,1); }
+  else { windowTxt='वापसी यात्रा पूरी होने के <b>3 माह</b> के भीतर <span class="ref">(अग्रिम नहीं)</span>'; if(dateStr)dueDate=addMonths(dateStr,3); }
+  let statusBadge='';
+  if(dueDate){
+    const today=new Date(); today.setHours(0,0,0,0);
+    const diff=Math.round((dueDate-today)/86400000);
+    if(diff<0) statusBadge='<span class="badge over">⚠ '+(-diff)+' दिन की देरी — दावा निरस्त हो सकता है; माफी (condonation) हेतु आवेदन करें</span>';
+    else if(diff<=10) statusBadge='<span class="badge soon">'+diff+' दिन शेष — अभी जमा करें</span>';
+    else statusBadge='<span class="badge ok">'+diff+' दिन शेष</span>';
+  }
+  const bannerInner = dueDate
+    ? 'अपना दावा <b>'+windowTxt+'</b> जमा करें — अर्थात् <b>'+fmt(dueDate)+'</b> तक। '+statusBadge
+    : 'अपना दावा '+windowTxt+' जमा करें। <i>सटीक तारीख जानने हेतु ऊपर यात्रा पूरी होने की तारीख भरें।</i>';
+  const co=controllingOfficer(post);
+  const ca=competentAuthority(post);
+
+  const rows=[
+    ['rail','रेल',railClass(n),'TR 57'],
+    ['air','वायु (घरेलू)',airClass(n),'TR 62'],
+    ['road','सड़क (RMA)',roadClass(n),'TR 61'],
+    ['sea','समुद्र',seaClass(n),'TR 58']
+  ];
+  if(claim==='perm') rows.push(['','सामान / निजी वस्तुएँ',baggage(n),'TR 61A']);
+  rows.push(['','दैनिक भत्ता (DA)', isLTC?'LTC यात्रा पर देय नहीं':(claim==='perm'?'स्थायी ड्यूटी मूव पर देय नहीं':'अस्थायी ड्यूटी पर देय; नि:शुल्क भोजन/आवास पर घटाया जाता है'), isLTC?'TR 176.1':(claim==='perm'?'TR 59':'TR 114')]);
+  const entRows=rows.map(function(r){
+    const hl = r[0] && modes.indexOf(r[0])>=0 ? ' class="hi"':'';
+    return '<tr'+hl+'><td>'+r[1]+'</td><td>'+r[2]+' <span class="ref">('+r[3]+')</span></td></tr>';
+  }).join('');
+
+  const csBox = '<div class="callout warn"><b>प्रतिहस्ताक्षर आवश्यक</b>JCO/OR के दावे को जमा करने से पहले आपके नियंत्रक अधिकारी (ऊपर) का प्रतिहस्ताक्षर अनिवार्य है। <span class="ref">(TR 6)</span></div>';
+
+  const stepsHtml=C.steps.map(function(s){return '<li><b>'+s[0]+'.</b> '+s[1]+'</li>';}).join('');
+  const docsHtml=C.docs.map(function(d){var p=d.split('|');return '<label><input type="checkbox"><span>'+p[0]+' '+(p[1]==='1'?'<span class="opt">(यदि लागू हो)</span>':'')+'</span></label>';}).join('');
+
+  // राशि गणना
+  const fromS=esc(val('f_from'))||'ड्यूटी स्टेशन';
+  const toS=esc(val('f_to'))||(isLTC?'गृह नगर / यात्रा स्थल':(claim==='temp'?'TD स्टेशन':'नया स्टेशन'));
+  const dist=parseFloat(val('f_dist'))||0;
+  const pay=parseFloat(val('f_pay'))||0;
+  const days=parseFloat(val('f_days'))||0;
+  const nights=parseFloat(val('f_nights'))||0;
+  const fare=parseFloat(val('f_fare'))||0;
+  const rmaKm=parseFloat(val('f_rmakm'))||0;
+  const rmaRate=val('f_rmamode')==='car'?RMA_CAR:RMA_AUTO;
+  const rmaModeTxt=val('f_rmamode')==='car'?'कार/टैक्सी':'ऑटो/स्कूटर';
+  const fromField=val('f_field')==='yes';
+  const island=val('f_island')==='yes';
+
+  let calcRows=[], total=0, calcNotes=[];
+  function add(label,amt,note){ calcRows.push([label,amt,note]); if(amt>0) total+=amt; }
+
+  if(fare>0) add('यात्रा किराया (आने-जाने का, रेल/वायु)', fare, 'आपने जो अनुमान भरा। बिल में हकदार श्रेणी का वास्तविक किराया / वारंट मूल्य का दावा करें।');
+  else calcRows.push(['यात्रा किराया (आने-जाने का, रेल/वायु)', -1, 'जोड़ने हेतु ऊपर अनुमानित/वास्तविक किराया भरें। हकदार श्रेणी पर वास्तविक दावा।']);
+
+  if(claim==='temp'){
+    if(days>0){ add('भोजन (DA) — '+days+' दिन × '+rupee(daFood(n)), daFood(n)*days, 'आपके स्तर की दैनिक एकमुश्त भोजन राशि। अंश-दिन: <6घं=30%, 6-12घं=70%, >12घं=100%। नि:शुल्क भोजन+आवास पर 25%, नि:शुल्क भोजन न मिले तो 50%+राशन मनी। (TR 59)'); }
+    else calcRows.push(['भोजन (DA)', -1, rupee(daFood(n))+'/दिन (आपके स्तर) — ऊपर TD दिन भरें। (TR 59)']);
+    if(nights>0){ add('आवास — '+nights+' रात × अधिकतम '+rupee(hotelCeil(n)), hotelCeil(n)*nights, 'आपके स्तर की होटल/ठहराव सीमा प्रति दिन; बिल/स्व-प्रमाणन पर इस सीमा तक प्रतिपूर्ति। (TR 59)'); }
+    else calcRows.push(['आवास (होटल)', -1, 'अधिकतम '+rupee(hotelCeil(n))+'/रात — ऊपर रातों की संख्या भरें। (TR 59)']);
+  } else if(claim==='perm'){
+    if(pay>0){ const pct=island?1:0.8; add('समेकित स्थानांतरण अनुदान (CTG) — मूल वेतन का '+(island?'100%':'80%'), pay*pct, 'मूल वेतन पर (NPA एवं MSP छोड़कर)। '+(island?'A&N/लक्षद्वीप हेतु 100%। ':'')+'20 किमी से कम, एक ही शहर में हो तो एक-तिहाई। (TR 67.2)'); }
+    else calcRows.push(['समेकित स्थानांतरण अनुदान (CTG)', -1, 'पिछले माह मूल वेतन का '+(island?'100%':'80%')+' — ऊपर मूल वेतन भरें। (TR 67.2)']);
+    const rate=baggageRoadRate(n);
+    if(fromField){
+      calcRows.push(['सामान '+fromS+' से (फील्ड) — केवल 100 किग्रा', -1, 'फील्ड स्टेशन से केवल <b>100 किग्रा</b> देय — 100 किग्रा ले जाने की <b>वास्तविक</b> लागत पर (कुछ सौ से ~₹1,500), पूर्ण-लोड दर पर नहीं। शेष '+baggageKg(n)+' किग्रा तक आपके SPR/गृह नगर से '+toS+' तक देय। (TR 67.3f)']);
+    } else if(dist>0){
+      add('सामान सड़क द्वारा — '+rupee(rate)+'/किमी × '+dist+' किमी', rate*dist, 'पूर्ण हकदार लोड ('+baggageKg(n)+' किग्रा) सड़क द्वारा, '+fromS+' → '+toS+'। गुड्स ट्रेन से वास्तविक वज़न पर। (TR 61A)');
+    } else {
+      calcRows.push(['सामान सड़क द्वारा', -1, rupee(rate)+'/किमी × दूरी (आपका स्केल '+baggageKg(n)+' किग्रा) — ऊपर दूरी भरें। (TR 61A)']);
+    }
+    calcNotes.push('स्थायी ड्यूटी मूव पर DA (भोजन/आवास) देय नहीं। एक कार/मोटरसाइकिल का परिवहन अतिरिक्त, वास्तविक रेल/स्टीमर लागत पर (TR 67.4)।');
+  } else {
+    calcNotes.push('किसी भी LTC यात्रा पर DA (भोजन/आवास) देय नहीं। आप वारंट/Form ‘D’ पर; परिवार को किराया प्रतिपूर्ति (TR 184)। जोड़ने हेतु ऊपर किराया अनुमान भरें।');
+  }
+
+  if(rmaKm>0){ add('RMA (स्थानीय/सड़क यात्रा) — '+rmaKm+' किमी × '+rupee(rmaRate)+' ('+rmaModeTxt+')', rmaRate*rmaKm, 'ड्यूटी-बिंदु ↔ स्टेशन/एयरपोर्ट एवं स्थानीय यात्रा हेतु। रेल-जुड़े मार्गों पर हकदार रेल किराए तक सीमित। (TR 61)'); }
+  else calcRows.push(['RMA (स्थानीय/सड़क यात्रा)', -1, rupee(RMA_CAR)+'/किमी कार-टैक्सी या '+rupee(RMA_AUTO)+'/किमी ऑटो — ऊपर सड़क किमी भरें। रेल-जुड़े मार्गों पर रेल किराए तक सीमित। (TR 61)']);
+
+  calcNotes.push('DA 50% बढ़ने पर सभी दरें 25% बढ़ती हैं। राशि सांकेतिक है — अंतिम राशि PAO/लेखा कार्यालय द्वारा तय होगी।');
+
+  const calcBody = calcRows.map(function(r){
+    const amt = r[1]<0 ? '<span class="ref">टिप्पणी देखें</span>' : '<b>'+rupee(r[1])+'</b>';
+    return '<tr><td>'+r[0]+'</td><td style="text-align:left;white-space:nowrap">'+amt+'</td></tr>'+(r[2]?'<tr><td colspan="2" class="ref" style="padding-top:0">'+r[2]+'</td></tr>':'');
+  }).join('');
+  const notesHtml = calcNotes.length? '<div class="callout ok" style="margin-top:6px"><b>अन्य देय / टिप्पणियाँ</b>'+calcNotes.join('<br>')+'</div>':'';
+  const advanceLine = total>0
+    ? '<div class="total-chip"><span style="font-size:30px">💰</span><div style="flex:1"><div class="lbl">कुल सांकेतिक अग्रिम · '+esc(fromS)+' → '+esc(toS)+'</div><div class="big">'+rupee(total)+'</div><div style="font-size:11px;opacity:.92">नीचे की मदों का योग — खाली फ़ील्ड भरकर इसे सटीक करें</div></div></div>'
+    : '<div class="callout warn"><b>ऊपर आँकड़े भरें</b>कुल अग्रिम बनाने हेतु किराया, TD दिन/रातें, दूरी, मूल वेतन या RMA किमी भरें।</div>';
+
+  document.getElementById('out').innerHTML=''
+  +'<div class="sheet"><div class="sheet-head"><h2>दावा पत्र — '+C.title+'</h2><div class="meta">'
+  +'<span>'+name+(no?' · '+no:'')+'</span><span>'+esc(rankTxt)+' · '+service+'</span><span>वेतन स्तर '+lvl+'</span><span>'+new Date().toLocaleDateString('en-GB')+'</span></div></div>'
+  +'<div class="deadline-banner"><span class="clk">⏰</span><span>'+bannerInner+'</span></div>'
+  +'<div class="block"><h3><span class="n">1</span> क्या-क्या हकदारी है — आपकी यात्रा हकदारी</h3>'
+  +'<table class="t"><tr><th>साधन</th><th>आपकी हकदारी</th></tr>'+entRows+'</table>'
+  +'<div class="callout ok" style="margin-top:12px"><b>टिप्पणी</b>'+C.note+'</div></div>'
+  +'<div class="block"><h3><span class="n">2</span> कितना मिल सकता है — '+esc(fromS)+' → '+esc(toS)+(dist?' ('+dist+' किमी)':'')+'</h3>'
+  +advanceLine+'<table class="t"><tr><th>दावे का मद</th><th style="text-align:left">राशि</th></tr>'+calcBody+'</table>'+notesHtml
+  +'<div class="callout warn" style="margin-top:6px"><b>ध्यान दें</b>राशि <b>सांकेतिक</b> है, TR 2025 की आधार दरों पर (रेल/वायु किराया वास्तविक पर; DA 50% बढ़ने पर दरें 25% बढ़ती हैं)। इससे अपना <b>अग्रिम</b> आँकें एवं अंतिम बिल जाँचें — अंतिम राशि PAO/लेखा कार्यालय द्वारा तय होगी।</div></div>'
+  +'<div class="block"><h3><span class="n">3</span> किस प्राधिकारी से — कौन मंज़ूरी/हस्ताक्षर करता है</h3>'
+  +'<div class="auth-card"><div class="role">मूव आदेश देने वाला प्राधिकारी</div><div class="who">परिशिष्ट C के अधीन सक्षम प्राधिकारी</div><div class="desc">आपका मूवमेंट ऑर्डर/अवकाश मंज़ूरी जारी करता है जिससे यात्रा "ड्यूटी पर" मानी जाती है। प्रमाणित प्रति दावे के साथ लगाएँ।</div><span class="pill">परिशिष्ट C · TR 4</span></div>'
+  +'<div class="auth-card"><div class="role">नियंत्रक अधिकारी (बिल पर प्रतिहस्ताक्षर)</div><div class="who">'+co[0]+'</div><div class="desc">'+co[1]+' वास्तविक मामलों में नकद रसीद/बोर्डिंग पास की छूट भी दे सकते हैं।</div><span class="pill">परिशिष्ट B · TR 6 एवं 9</span></div>'
+  +'<div class="auth-card"><div class="role">सक्षम प्राधिकारी (मूव/छूट की मंज़ूरी)</div><div class="who">'+ca+'</div><div class="desc">विशेष छूट हेतु आवश्यक — समय सीमा बढ़ाना, अनधिकृत श्रेणी/साधन आदि।</div><span class="pill">परिशिष्ट A · TR 2</span></div>'
+  +'<div class="auth-card"><div class="role">अग्रिम एवं भुगतान</div><div class="who">PAO (वेतन लेखा अधिकारी)</div><div class="desc">JCO/OR यात्रा से पहले PAO से अग्रिम लेते हैं; दावा OC यूनिट के माध्यम से PAO को जाता है।</div><span class="pill">TR 17</span></div>'
+  +csBox+'</div>'
+  +'<div class="block"><h3><span class="n">4</span> दावा कैसे भरें — चरण-दर-चरण</h3><ol class="steps">'+stepsHtml+'</ol></div>'
+  +'<div class="block"><h3><span class="n">5</span> लगाने वाले दस्तावेज़ (जुटाते जाएँ, टिक करें)</h3>'
+  +'<div class="progwrap"><div class="progbar"><div class="progfill" id="docFill"></div></div><span class="progtxt" id="docTxt">0 / '+C.docs.length+' तैयार</span></div>'
+  +'<div class="check" id="docCheck">'+docsHtml+'</div></div>'
+  +'<div class="block"><h3><span class="n">6</span> जमा करने की समय सीमा</h3>'
+  +'<div class="callout warn"><b>इस दावे की समय सीमा</b>'+windowTxt+' जमा करें।'+(dueDate?' आपकी यात्रा हेतु यह <b>'+fmt(dueDate)+'</b> है। '+statusBadge:'')+' गणना <b>यात्रा पूरी होने की तारीख</b> से होती है — इसे बिल पर लिखें।</div>'
+  +'<ol class="steps">'
+  +(!isLTC?'<li><b>TA/DA (ड्यूटी/तबादला/प्रशिक्षण/सेवानिवृत्ति):</b> यात्रा पूरी होने के <b>60 दिन</b> में न देने पर दावा निरस्त। <i>(TR 17, पैरा 8b)</i></li><li><b>सामान/निजी वस्तुएँ:</b> नए स्टेशन पर पहुँचने की तारीख से <b>60 दिन</b> में। <i>(पैरा 8d)</i></li><li><b>परिवार एवं सामान मूव:</b> मूव के <b>6 माह</b> में (सेवानिवृत्ति पर 1 वर्ष)। <i>(TR 16)</i></li>'
+    :'<li><b>LTC अग्रिम सहित:</b> वापसी यात्रा के <b>1 माह</b> में समायोजन; अन्यथा एकमुश्त वसूली, फिर <b>3 माह</b> में दावा। <i>(LTC पैरा 32g)</i></li><li><b>LTC बिना अग्रिम:</b> वापसी यात्रा के <b>3 माह</b> में जमा करें। <i>(पैरा 32k)</i></li><li><b>अग्रिम — वापसी/प्रमाण:</b> यात्रा <b>30 दिन</b> में शुरू न हो तो पूरा लौटाएँ; <b>10 दिन</b> में टिकट दिखाएँ। <i>(पैरा 32f)</i></li><li><b>परिवार की वापसी:</b> प्रारंभिक यात्रा के <b>6 माह</b> में। <i>(TR 184.11)</i></li>')
+  +'<li><b>देरी से जमा:</b> लिया गया अग्रिम <b>GPF दर से 2% अधिक दंडात्मक ब्याज</b> सहित वसूला जाता है; समय बढ़ाने हेतु सक्षम प्राधिकारी आवश्यक। <i>(TR 17A)</i></li>'
+  +'</ol></div></div>';
+  document.getElementById('out').classList.add('show');
+  bindDocProgress();
+  if(scroll!==false) document.getElementById('out').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function updateLabels(){
+  const c=document.getElementById('f_claim').value;
+  const labFrom=document.getElementById('lab_from'), labTo=document.getElementById('lab_to');
+  const days=document.getElementById('wrap_days'), nights=document.getElementById('wrap_nights');
+  const td = c==='temp' ? '' : 'none';
+  days.style.display=td; nights.style.display=td;
+  if(c==='temp'){ labFrom.textContent='ड्यूटी स्टेशन (से)'; labTo.textContent='TD स्टेशन (तक)'; }
+  else if(c==='perm'){ labFrom.textContent='ड्यूटी स्टेशन (से)'; labTo.textContent='नया स्टेशन (तक)'; }
+  else { labFrom.textContent='अवकाश स्टेशन (से)'; labTo.textContent='गृह नगर / यात्रा स्थल (तक)'; }
+}
+document.getElementById('f_claim').addEventListener('change',updateLabels); updateLabels();
+
+try{
+document.querySelectorAll('#claimTiles .ctile').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('#claimTiles .ctile').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    const s=document.getElementById('f_claim'); s.value=t.dataset.v; s.dispatchEvent(new Event('change'));
+  });
+});
+document.querySelectorAll('#svcSeg button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#svcSeg button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on');
+    const s=document.getElementById('f_service'); s.value=b.dataset.v; s.dispatchEvent(new Event('change'));
+  });
+});
+}catch(e){}
+
+function bindDocProgress(){
+  const box=document.getElementById('docCheck'); if(!box) return;
+  const fill=document.getElementById('docFill'), txt=document.getElementById('docTxt');
+  const boxes=box.querySelectorAll('input[type=checkbox]');
+  const upd=function(){ const done=_arr(boxes).filter(function(b){return b.checked;}).length; const pct=boxes.length?Math.round(done/boxes.length*100):0;
+    fill.style.width=pct+'%'; txt.textContent=done+' / '+boxes.length+' तैयार';
+    if(done===boxes.length&&boxes.length){ txt.textContent='✓ सभी दस्तावेज़ तैयार'; txt.style.color='var(--ok)'; } else { txt.style.color='var(--accent-d)'; } };
+  boxes.forEach(function(b){b.addEventListener('change',upd);}); upd();
+}
+
+document.getElementById('genBtn').addEventListener('click',function(){generate(true);});
+document.getElementById('printBtn').addEventListener('click',function(){window.print();});
+['f_name','f_no','f_service','f_rank','f_post','f_claim','f_date','f_adv','f_from','f_to','f_dist','f_pay','f_days','f_nights','f_fare','f_rmakm','f_rmamode','f_field','f_island'].forEach(function(id){
+  const el=document.getElementById(id); if(!el) return;
+  el.addEventListener('change',function(){ if(document.getElementById('out').classList.contains('show')) generate(false); });
+  el.addEventListener('input',function(){ if(document.getElementById('out').classList.contains('show')) generate(false); });
+});
+document.querySelectorAll('.mode').forEach(function(m){m.addEventListener('change',function(){ if(document.getElementById('out').classList.contains('show')) generate(false); });});
+</script>
+</body>
+</html>
